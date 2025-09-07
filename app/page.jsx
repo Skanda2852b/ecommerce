@@ -317,7 +317,7 @@ export default function Home() {
 
               {isAuthenticated ? (
                 <Link
-                  href="/categories"
+                  href="/items"
                   className="bg-transparent border-2 border-white hover:bg-white hover:text-purple-700 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300"
                 >
                   Browse
