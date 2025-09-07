@@ -16,13 +16,54 @@ export default function Home() {
     categories,
     setCategories,
   ] = useState([]);
+  const [
+    isAuthenticated,
+    setIsAuthenticated,
+  ] = useState(false);
+  const [
+    isLoading,
+    setIsLoading,
+  ] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
+    // Check authentication status
+    checkAuthStatus();
     // Fetch featured products from your API
     fetchFeaturedProducts();
     fetchCategories();
   }, []);
+
+  const checkAuthStatus =
+    async () => {
+      try {
+        const response =
+          await fetch(
+            "/api/auth/status"
+          );
+        if (response.ok) {
+          const data =
+            await response.json();
+          setIsAuthenticated(
+            data.isAuthenticated
+          );
+        } else {
+          setIsAuthenticated(
+            false
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Error checking auth status:",
+          error
+        );
+        setIsAuthenticated(
+          false
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
   const fetchFeaturedProducts =
     async () => {
@@ -162,6 +203,11 @@ export default function Home() {
   const addToCart = async (
     productId
   ) => {
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
     try {
       const response =
         await fetch(
@@ -210,6 +256,22 @@ export default function Home() {
     }
   };
 
+  const handleProtectedAction =
+    (e) => {
+      if (!isAuthenticated) {
+        e.preventDefault();
+        router.push("/login");
+      }
+    };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section */}
@@ -231,20 +293,49 @@ export default function Home() {
               lifestyle
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link
-                href="/items"
-                className="bg-white text-purple-700 hover:bg-purple-50 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-              >
-                Shop
-                Collection
-              </Link>
-              <Link
-                href="/categories"
-                className="bg-transparent border-2 border-white hover:bg-white hover:text-purple-700 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300"
-              >
-                Browse
-                Categories
-              </Link>
+              {isAuthenticated ? (
+                <Link
+                  href="/items"
+                  className="bg-white text-purple-700 hover:bg-purple-50 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  Shop
+                  Collection
+                </Link>
+              ) : (
+                <button
+                  onClick={() =>
+                    router.push(
+                      "/login"
+                    )
+                  }
+                  className="bg-white text-purple-700 hover:bg-purple-50 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  Shop
+                  Collection
+                </button>
+              )}
+
+              {isAuthenticated ? (
+                <Link
+                  href="/categories"
+                  className="bg-transparent border-2 border-white hover:bg-white hover:text-purple-700 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300"
+                >
+                  Browse
+                  Categories
+                </Link>
+              ) : (
+                <button
+                  onClick={() =>
+                    router.push(
+                      "/login"
+                    )
+                  }
+                  className="bg-transparent border-2 border-white hover:bg-white hover:text-purple-700 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300"
+                >
+                  Browse
+                  Categories
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -380,28 +471,59 @@ export default function Home() {
         </div>
 
         <div className="text-center mt-12">
-          <Link
-            href="/items"
-            className="inline-flex items-center justify-center bg-white text-purple-700 border-2 border-purple-700 hover:bg-purple-50 px-8 py-3 rounded-lg font-semibold text-lg transition-colors"
-          >
-            View All Products
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 ml-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+          {isAuthenticated ? (
+            <Link
+              href="/items"
+              className="inline-flex items-center justify-center bg-white text-purple-700 border-2 border-purple-700 hover:bg-purple-50 px-8 py-3 rounded-lg font-semibold text-lg transition-colors"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={
-                  2
-                }
-                d="M14 5l7 7m0 0l-7 7m7-7H3"
-              />
-            </svg>
-          </Link>
+              View All
+              Products
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 ml-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={
+                    2
+                  }
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                />
+              </svg>
+            </Link>
+          ) : (
+            <button
+              onClick={() =>
+                router.push(
+                  "/login"
+                )
+              }
+              className="inline-flex items-center justify-center bg-white text-purple-700 border-2 border-purple-700 hover:bg-purple-50 px-8 py-3 rounded-lg font-semibold text-lg transition-colors"
+            >
+              View All
+              Products
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 ml-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={
+                    2
+                  }
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                />
+              </svg>
+            </button>
+          )}
         </div>
       </section>
 
@@ -427,43 +549,88 @@ export default function Home() {
               (
                 category,
                 index
-              ) => (
-                <Link
-                  key={index}
-                  href={`/items?category=${category.name}`}
-                  className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-center group"
-                >
-                  <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition-colors">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-8 w-8 text-purple-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={
-                          2
-                        }
-                        d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-purple-700 transition-colors">
-                    {
-                      category.name
+              ) =>
+                isAuthenticated ? (
+                  <Link
+                    key={
+                      index
                     }
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    {
-                      category.count
-                    }{" "}
-                    items
-                  </p>
-                </Link>
-              )
+                    href={`/items?category=${category.name}`}
+                    className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-center group"
+                  >
+                    <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition-colors">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-8 w-8 text-purple-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={
+                            2
+                          }
+                          d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-purple-700 transition-colors">
+                      {
+                        category.name
+                      }
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {
+                        category.count
+                      }{" "}
+                      items
+                    </p>
+                  </Link>
+                ) : (
+                  <button
+                    key={
+                      index
+                    }
+                    onClick={() =>
+                      router.push(
+                        "/login"
+                      )
+                    }
+                    className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-center group"
+                  >
+                    <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition-colors">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-8 w-8 text-purple-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={
+                            2
+                          }
+                          d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-purple-700 transition-colors">
+                      {
+                        category.name
+                      }
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {
+                        category.count
+                      }{" "}
+                      items
+                    </p>
+                  </button>
+                )
             )}
           </div>
         </div>
